@@ -1,0 +1,145 @@
+<!--
+Copyright (C) 2024 The Qt Company Ltd.
+SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+-->
+
+<!doctype html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <!--Set visual viewport size for mobile devices to the device size,
+        witch results in a scale of 1 and a 1:1 mapping between CSS pixels
+        and Qt device independent pixels. -->
+  <meta name="viewport" content="width=device-width, height=device-height, user-scalable=0" />
+
+  <title>rccLoader</title>
+  <style>
+    /* Make the html body cover the entire (visual) viewport with no scroll bars. */
+    html,
+    body {
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      height: 100%
+    }
+
+    #screen {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body onload="init()">
+  <figure style="overflow:visible;" id="qtspinner">
+    <center style="margin-top:1.5em; line-height:150%">
+      <img src="qtlogo.svg" width="320" height="200" style="display:block"></img>
+      <strong>Qt for WebAssembly: rccLoader</strong>
+      <div id="qtstatus"></div>
+      <noscript>JavaScript is disabled. Please enable JavaScript to use this application.</noscript>
+    </center>
+  </figure>
+  <div id="screen"></div>
+
+  <script type="text/javascript">
+    const wasmParts = [
+      "rccLoader01.wasm",
+      "rccLoader02.wasm",
+      "rccLoader03.wasm",
+      "rccLoader04.wasm",
+      "rccLoader05.wasm",
+      "rccLoader06.wasm",
+      "rccLoader07.wasm",
+      "rccLoader08.wasm",
+      "rccLoader09.wasm",
+      "rccLoader10.wasm",
+    ];
+
+    // 带重试 + 指数退避的 fetch
+    async function fetchWithRetry(
+      url,
+      retries = 3,
+      delay = 1000,
+      maxDelay = 10000
+    ) {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.arrayBuffer();
+        } catch (err) {
+          console.warn(`请求失败 [${url}] 第 ${attempt} 次:`, err);
+          if (attempt < retries) {
+            const waitTime = Math.min(delay * Math.pow(2, attempt - 1), maxDelay);
+            console.log(`等待 ${waitTime} ms 后重试`);
+            await new Promise((r) => setTimeout(r, waitTime));
+          } else {
+            throw err;
+          }
+        }
+      }
+    }
+
+    // 生成临时 URL 理论上可以直接读buffer，但是我不确定qt后续是否需要用到
+    async function loadAndMergeWasm(parts) {
+
+      const buffers = await Promise.all(
+        parts.map((url) => fetchWithRetry(url, 5, 1000, 5000))
+      );
+      const totalLength = buffers.reduce((sum, b) => sum + b.byteLength, 0);
+      const merged = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const buf of buffers) {
+        merged.set(new Uint8Array(buf), offset);
+        offset += buf.byteLength;
+      }
+      const blob = new Blob([merged], { type: "application/wasm" });
+      const tempUrl = URL.createObjectURL(blob);
+      return tempUrl;
+    }
+    async function init() {
+      const spinner = document.querySelector('#qtspinner');
+      const screen = document.querySelector('#screen');
+      const status = document.querySelector('#qtstatus');
+
+      const showUi = (ui) => {
+        [spinner, screen].forEach(element => element.style.display = 'none');
+        if (screen === ui)
+          screen.style.position = 'default';
+        ui.style.display = 'block';
+      }
+
+      try {
+        showUi(spinner);
+        status.innerHTML = 'Loading...';
+
+        const instance = await qtLoad({
+          qt: {
+            onLoaded: () => showUi(screen),
+            onExit: exitData => {
+              status.innerHTML = 'Application exit';
+              status.innerHTML +=
+                exitData.code !== undefined ? ` with code ${exitData.code}` : '';
+              status.innerHTML +=
+                exitData.text !== undefined ? ` (${exitData.text})` : '';
+              showUi(spinner);
+            },
+            entryFunction: window.rccLoader_entry,
+            containerElements: [screen],
+
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        console.error(e.stack);
+      }
+    }
+  </script>
+  <script src="rccLoader.js"></script>
+  <script type="text/javascript" src="qtloader.js"></script>
+</body>
+
+</html>
