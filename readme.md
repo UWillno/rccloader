@@ -3,24 +3,24 @@
 
 ## 简介/Introduction
 
-一个简易的QML/RCC加载器，编译成wasm方便加载。
+一个简易的QML/RCC加载器，编译成wasm方便加载。  
 A simple QML/RCC loader, compiled into wasm for easy loading.
 
-适合纯QML项目，非性能场景，用于展示，比如[我的博客](https://uwillno.com)。
+适合纯QML项目，非性能场景，用于展示，比如[我的博客](https://uwillno.com)。  
 Suitable for pure QML projects, non-performance scenarios, for display, such as [my blog](https://uwillno.com).
 
-可以从文件加载也可以从链接/代码加载。
+可以从文件加载也可以从链接/代码加载。  
 Can be loaded from file or from link/code.
 
-你可以根据自己的项目增删模块，加入其它cpp逻辑。
+你可以根据自己的项目增删模块，加入其它cpp逻辑。  
 You can add or delete modules according to your own project, and add other cpp logic.
 
-当前Qt版本6.10.1，采用单线程套件，具体模块参见[.pro](./rccLoader.pro)文件。
+当前Qt版本6.10.1，采用单线程套件，具体模块参见[.pro](./rccLoader.pro)文件。  
 The current Qt version 6.10.1 uses a single-threaded package. For specific modules, see the [.pro](./rccLoader.pro) file.
 
 ## 使用/Use
 
-wasm上依靠查询参数加载。
+wasm上依靠查询参数加载。  
 Wasm relies on query parameters to load.
 
 ```html
@@ -40,10 +40,10 @@ https://xxxxx.com/?qml=https://xxxx.com/test.qml
 https://xxxxx.com/?rcc=https://xxxx.com/my.rcc
 ```
 
-[演示视频](https://www.bilibili.com/video/BV1xxqbBUEVL/)
+[演示视频](https://www.bilibili.com/video/BV1xxqbBUEVL/)  
 [Demonstration video](https://www.bilibili.com/video/BV1xxqbBUEVL/)
 
 ## 其它/Other
 
-代码仅供参考，未充分测试，只提供一个思路，你可以进行优化，建议是直接复制main.cpp自己改，或将web部分移到自己的静态托管平台避免跨域，还有我的Cloudflare Pages不一定稳定。
+代码仅供参考，未充分测试，只提供一个思路，你可以进行优化，建议是直接复制main.cpp自己改，或将web部分移到自己的静态托管平台避免跨域，还有我的Cloudflare Pages不一定稳定。  
 The code is for reference only and has not been fully tested. It only provides an idea. You can optimize it. It is recommended to directly copy the main.cpp and modify it yourself, or move the web part to your own static hosting platform to avoid cross-domain. Also, my Cloudflare Pages may not be stable.
